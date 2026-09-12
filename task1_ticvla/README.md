@@ -206,12 +206,11 @@ cannot walk" failure. Spot walks correctly under
 benchmark ships 85 episodes and every one of them is `nova_carter`, so the
 pretrained checkpoint has seen far more wheeled-base experience.
 
-**Videos — [watch them in the browser](https://huggingface.co/spaces/iug8oyo8/IMS2026-HW0-videos)**, one clip per episode with the
-RGB view on the left and a third-person view on the right. The mp4s themselves are
-in the [media dataset](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task1_ticvla_dynanav); the Space just plays
-them inline, since a dataset repo only offers files for download. Videos are hosted
-rather than committed, as the assignment requires. Rebuild locally with
-`./scripts/build_deliverables.sh`.
+**Videos:** one clip per episode, RGB view on the left and third-person view on the
+right, H.264 so they play in any browser —
+[`task1_ticvla_dynanav/`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task1_ticvla_dynanav) in the media
+dataset on the Hugging Face Hub. Hosted rather than committed, as the assignment
+requires for videos. Rebuild locally with `./scripts/build_deliverables.sh`.
 
 ## Live demo checklist
 

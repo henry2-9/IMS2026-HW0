@@ -86,8 +86,6 @@ and every environment fix documented in the per-task READMEs.
 Artifacts **not** in this repository, per the assignment: the LIBERO dataset,
 model checkpoints, and rendered videos. Those are on the Hugging Face Hub:
 
-**[▶ Watch the Task 1 videos](https://huggingface.co/spaces/iug8oyo8/IMS2026-HW0-videos)** — all 8 DynaNav episodes playing in the
-browser, four scenes x two robot platforms, RGB beside third-person.
-
-The files live in **[iug8oyo8/IMS2026-HW0-media](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media)** together with the
-Task 2 LIBERO live-view recordings.
+**[iug8oyo8/IMS2026-HW0-media](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media)** — the Task 1 DynaNav videos (8 episodes,
+four scenes x two robot platforms, RGB beside third-person) and the Task 2 LIBERO
+live-view recordings.
