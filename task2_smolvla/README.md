@@ -6,37 +6,55 @@ official [LeRobot](https://github.com/huggingface/lerobot) implementation.
 
 ## Results
 
-Submitted model: **`--policy.type=smolvla`, 100k steps, batch 64**, evaluated over
-the full protocol (4 suites x 10 tasks x 10 episodes = 400 episodes) with
-`n_action_steps=10` and 256x256 observations. LeRobot's LIBERO guide recommends
-averaging over three evaluation seeds, so all three are reported.
+Submitted model: **`--policy.type=smolvla`, 100k steps, batch 64,
+`scheduler_decay_steps=100000`**, evaluated over the full protocol (4 suites x
+10 tasks x 10 episodes = 400 episodes per seed) with `n_action_steps=10` and
+256x256 observations. LeRobot's LIBERO guide recommends averaging over three
+seeds, so all three are reported.
+
+Checkpoint: [`task2_smolvla_libero/pretrained_model`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task2_smolvla_libero)
 
 | Suite | seed 42 | seed 43 | seed 44 | mean | sd | Paper | Delta | within ±3 pp |
 |---|---|---|---|---|---|---|---|---|
-| LIBERO-Spatial | 80 % | 80 % | 82 % | 80.7 % | 0.9 | 90 % | −9.3 | no |
-| LIBERO-Object | 98 % | 95 % | 96 % | **96.3 %** | 1.2 | 96 % | +0.3 | **yes** |
-| LIBERO-Goal | 94 % | 87 % | 87 % | **89.3 %** | 3.3 | 92 % | −2.7 | **yes** |
-| LIBERO-Long | 61 % | 74 % | 61 % | 65.3 % | 6.1 | 71 % | −5.7 | no |
-| **Average** | 83.2 % | 84.0 % | 81.5 % | **82.9 %** | | 87.3 % | −4.4 | |
+| LIBERO-Spatial | 82 % | 80 % | 78 % | 80.0 % | 1.6 | 90 % | −10.0 | no |
+| LIBERO-Object | 98 % | 94 % | 93 % | **95.0 %** | 2.2 | 96 % | −1.0 | **yes** |
+| LIBERO-Goal | 93 % | 90 % | 94 % | **92.3 %** | 1.7 | 92 % | +0.3 | **yes** |
+| LIBERO-Long | 71 % | 75 % | 79 % | 75.0 % | 3.3 | 71 % | **+4.0** | no |
+| **Average** | 86.0 % | 84.8 % | 86.0 % | **85.6 %** | | 87.3 % | −1.7 | |
 
-Two of four suites land inside the ±3 pp band; the average is 4.4 pp below the
-paper. 400 episodes take ≈0.74 h at 0.98 GB peak VRAM.
+The average sits 1.7 pp below the paper. Two suites are inside the ±3 pp band —
+and LIBERO-Long misses it by **overshooting**: at 75.0 % it beats the paper's
+71.0 % by 4 points, which the band counts as a miss in either direction.
 
-**LIBERO-Spatial is a genuine gap, not sampling noise.** It reads 80/80/82 across
-three seeds (sd 0.9) while the other suites swing by up to 6 points, so the
-9.3 pp shortfall reproduces. It is not a training-setup difference either: the
-paper trains one multi-task model on all 40 tasks ("SmolVLA is always trained in
-a multi-task setting", 1,693 episodes), which is exactly what `lerobot/libero`
-and the command below do.
+**LIBERO-Spatial is the one genuine shortfall.** It reads 78–82 % across eight
+measurements spanning two models whose final training loss differed by 2.8x
+(0.084 vs 0.234), while every other suite moved with training quality. Whatever
+limits it is not training budget. It is not the training setup either: the paper
+also trains a single multi-task model over all 40 tasks ("SmolVLA is always
+trained in a multi-task setting", 1,693 episodes), which is exactly what
+`lerobot/libero` and the command below do.
 
-**LIBERO-Long is the noisiest suite** (61/74/61, sd 6.1). Single-seed numbers on
-it should not be trusted.
+### What the learning-rate schedule was worth
+
+The same recipe evaluated before and after aligning `scheduler_decay_steps` with
+`--steps` (3-seed means):
+
+| Suite | decay=30k | decay=100k | Paper |
+|---|---|---|---|
+| LIBERO-Spatial | 80.7 % | 80.0 % | 90 % |
+| LIBERO-Object | 96.3 % | 95.0 % | 96 % |
+| LIBERO-Goal | 89.3 % | **92.3 %** | 92 % |
+| LIBERO-Long | 65.3 % | **75.0 %** | 71 % |
+| **Average** | 82.9 % | **85.6 %** | 87.3 % |
+| final train loss | 0.234 | **0.084** | — |
+
+LIBERO-Long gains 9.7 pp and LIBERO-Goal 3.0 pp; Spatial does not move at all.
 
 ### Two initialisations, measured head to head
 
 Fine-tuning the pretrained `lerobot/smolvla_base` instead of training the action
 expert from scratch, at identical settings (100k steps, 400 episodes, seed 42,
-`n_action_steps=10`):
+`n_action_steps=10`, both with the 30k decay schedule):
 
 | Suite | from scratch | fine-tuned from `smolvla_base` | Paper |
 |---|---|---|---|
@@ -46,49 +64,18 @@ expert from scratch, at identical settings (100k steps, 400 episodes, seed 42,
 | LIBERO-Long | 61 % | 59 % | 71 % |
 | **Average** | **83.2 %** | 81.0 % | 87.3 % |
 
-From-scratch is ahead by 2.2 pp on this seed. That is **within the noise** — the
-seed-to-seed spread of the from-scratch average alone is 81.5–84.0 % — so this
-measurement does not establish that either initialisation is better, only that
-fine-tuning `smolvla_base` brings no benefit worth its cost: adapting an
-SO-101-pretrained checkpoint to LIBERO needs a padded third camera, which raises
-peak VRAM from 12.2 GB to 21.5 GB and drops throughput from 127 to 77 samples/s.
+From-scratch is ahead by 2.2 pp on that seed, which is **within the noise** — the
+seed-to-seed spread of its own average is 81.5–84.0 %. So neither initialisation
+is shown to be better; fine-tuning `smolvla_base` simply brings no benefit worth
+its cost, since adapting an SO-101-pretrained checkpoint to LIBERO needs a padded
+third camera, raising peak VRAM from 12.2 GB to 21.5 GB and dropping throughput
+from 127 to 77 samples/s.
 
 The trap worth recording: the from-scratch model first measured at 67.0 %, which
 prompted the switch to `smolvla_base`. That measurement used the checkpoint's
 default `n_action_steps=50`. Comparing two models under different inference
 settings produced a conclusion a controlled rerun did not support — and the
 22 GPU-hours spent fine-tuning bought nothing.
-
-### The LR schedule must be extended with `--steps`
-
-`SmolVLAConfig.scheduler_decay_steps` defaults to **30,000**. LeRobot's cosine
-scheduler *shortens* that when `--steps` is smaller, but never extends it, and
-logs nothing when `--steps` is larger. Training 100k steps with the default
-therefore parks the learning rate at `decay_lr=2.5e-6` — 1/38 of peak — from
-step 30k onward:
-
-| step | lr | loss |
-|---|---|---|
-| 10k | 7.8e-05 | 0.359 |
-| 20k | 2.9e-05 | 0.254 |
-| 30k | 2.6e-06 | 0.238 |
-| 50k | 2.5e-06 | 0.238 |
-| 100k | 2.5e-06 | 0.236 |
-
-Seventy percent of that run trained at the floor. This single mistake explains
-three separate observations that were confusing on their own: the loss going
-flat around step 25k, extending a fine-tune from 30k to 100k steps changing
-nothing, and the from-scratch and fine-tuned loss curves sitting on top of each
-other (both had stopped learning at the same point).
-
-`scripts/train.sh full` now passes `--policy.scheduler_decay_steps=100000` to
-keep the decay aligned with the run length.
-
-### Training length
-
-Extending the fine-tune from 30k to 100k steps moved its average from 80.0 % to
-81.0 %, i.e. nothing outside the noise, matching a training loss flat since
-roughly step 25k (0.233 → 0.228).
 
 ## 1. Environment
 

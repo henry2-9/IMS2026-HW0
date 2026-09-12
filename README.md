@@ -65,15 +65,17 @@ Nova Carter 3/4, Spot 1/4, every episode collision-free. Details in
 
 | Suite | Ours (3-seed mean) | Paper | within ±3 pp |
 |---|---|---|---|
-| LIBERO-Spatial | 80.7 % | 90 % | no |
-| LIBERO-Object | **96.3 %** | 96 % | **yes** |
-| LIBERO-Goal | **89.3 %** | 92 % | **yes** |
-| LIBERO-Long | 65.3 % | 71 % | no |
-| **Average** | **82.9 %** | 87.3 % | |
+| LIBERO-Spatial | 80.0 % | 90 % | no |
+| LIBERO-Object | **95.0 %** | 96 % | **yes** |
+| LIBERO-Goal | **92.3 %** | 92 % | **yes** |
+| LIBERO-Long | 75.0 % | 71 % | no (overshoots by 4.0) |
+| **Average** | **85.6 %** | 87.3 % | |
 
-Two of four suites inside the band. LIBERO-Spatial reproduces at 80/80/82 across
-seeds, so its 9.3 pp shortfall is a real gap rather than variance. Details, plus
-the head-to-head against fine-tuning `smolvla_base`, in
+The average lands 1.7 pp under the paper. LIBERO-Long misses the band by beating
+it. LIBERO-Spatial is the one real shortfall: it reads 78–82 % across eight
+measurements spanning models whose training loss differed by 2.8x, so it is not a
+training-budget problem. Details, the learning-rate schedule that was worth 2.7 pp
+of average, and the head-to-head against fine-tuning `smolvla_base`, in
 [`task2_smolvla/README.md`](task2_smolvla/README.md).
 
 See [`DEMO.md`](DEMO.md) for the live-demo runbook.
