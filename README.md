@@ -61,18 +61,22 @@ Four things cost real time to diagnose; all are documented in the task READMEs.
 Nova Carter 3/4, Spot 1/4, every episode collision-free. Details in
 [`task1_ticvla/README.md`](task1_ticvla/README.md).
 
-**Task 2 — SmolVLA on LIBERO** (400 episodes, `n_action_steps=10`)
+**Task 2 — SmolVLA on LIBERO** (400 episodes per seed, 3 seeds, `n_action_steps=10`)
 
-| Suite | Ours | Paper | within ±3 pp |
+| Suite | Ours (3-seed mean) | Paper | within ±3 pp |
 |---|---|---|---|
-| LIBERO-Spatial | 80.0 % | 90.0 % | no |
-| LIBERO-Object | **98.0 %** | 96.0 % | **yes** |
-| LIBERO-Goal | **92.0 %** | 92.0 % | **yes** |
-| LIBERO-Long | **72.0 %** | 71.0 % | **yes** |
-| **Average** | **85.5 %** | 87.3 % | |
+| LIBERO-Spatial | 80.7 % | 90 % | no |
+| LIBERO-Object | **96.3 %** | 96 % | **yes** |
+| LIBERO-Goal | **89.3 %** | 92 % | **yes** |
+| LIBERO-Long | 65.3 % | 71 % | no |
+| **Average** | **82.9 %** | 87.3 % | |
 
-Three of four suites inside the band. Details, plus the head-to-head against
-fine-tuning `smolvla_base`, in [`task2_smolvla/README.md`](task2_smolvla/README.md).
+Two of four suites inside the band. LIBERO-Spatial reproduces at 80/80/82 across
+seeds, so its 9.3 pp shortfall is a real gap rather than variance. Details, plus
+the head-to-head against fine-tuning `smolvla_base`, in
+[`task2_smolvla/README.md`](task2_smolvla/README.md).
+
+See [`DEMO.md`](DEMO.md) for the live-demo runbook.
 
 ## Status
 

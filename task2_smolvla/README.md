@@ -8,51 +8,62 @@ official [LeRobot](https://github.com/huggingface/lerobot) implementation.
 
 Submitted model: **`--policy.type=smolvla`, 100k steps, batch 64**, evaluated over
 the full protocol (4 suites x 10 tasks x 10 episodes = 400 episodes) with
-`n_action_steps=10` and 256x256 observations.
+`n_action_steps=10` and 256x256 observations. LeRobot's LIBERO guide recommends
+averaging over three evaluation seeds, so all three are reported.
 
-| Suite | Ours | Paper | Delta | within ±3 pp |
-|---|---|---|---|---|
-| LIBERO-Spatial | 80.0 % | 90.0 % | −10.0 | no |
-| LIBERO-Object | **98.0 %** | 96.0 % | +2.0 | **yes** |
-| LIBERO-Goal | **92.0 %** | 92.0 % | +0.0 | **yes** |
-| LIBERO-Long | **72.0 %** | 71.0 % | +1.0 | **yes** |
-| **Average** | **85.5 %** | 87.3 % | −1.8 | |
+| Suite | seed 42 | seed 43 | seed 44 | mean | sd | Paper | Delta | within ±3 pp |
+|---|---|---|---|---|---|---|---|---|
+| LIBERO-Spatial | 80 % | 80 % | 82 % | 80.7 % | 0.9 | 90 % | −9.3 | no |
+| LIBERO-Object | 98 % | 95 % | 96 % | **96.3 %** | 1.2 | 96 % | +0.3 | **yes** |
+| LIBERO-Goal | 94 % | 87 % | 87 % | **89.3 %** | 3.3 | 92 % | −2.7 | **yes** |
+| LIBERO-Long | 61 % | 74 % | 61 % | 65.3 % | 6.1 | 71 % | −5.7 | no |
+| **Average** | 83.2 % | 84.0 % | 81.5 % | **82.9 %** | | 87.3 % | −4.4 | |
 
-Three of the four suites land inside the ±3 pp band; LIBERO-Spatial is the
-outlier. 400 episodes take 0.74 h at 0.98 GB peak VRAM.
+Two of four suites land inside the ±3 pp band; the average is 4.4 pp below the
+paper. 400 episodes take ≈0.74 h at 0.98 GB peak VRAM.
+
+**LIBERO-Spatial is a genuine gap, not sampling noise.** It reads 80/80/82 across
+three seeds (sd 0.9) while the other suites swing by up to 6 points, so the
+9.3 pp shortfall reproduces. It is not a training-setup difference either: the
+paper trains one multi-task model on all 40 tasks ("SmolVLA is always trained in
+a multi-task setting", 1,693 episodes), which is exactly what `lerobot/libero`
+and the command below do.
+
+**LIBERO-Long is the noisiest suite** (61/74/61, sd 6.1). Single-seed numbers on
+it should not be trusted.
 
 ### Two initialisations, measured head to head
 
-An earlier reading of the LeRobot LIBERO docs suggested fine-tuning the
-pretrained `lerobot/smolvla_base` instead of training the action expert from
-scratch. Measured at identical settings (100k steps, 400 episodes,
-`n_action_steps=10`), that is **worse**:
+Fine-tuning the pretrained `lerobot/smolvla_base` instead of training the action
+expert from scratch, at identical settings (100k steps, 400 episodes, seed 42,
+`n_action_steps=10`):
 
 | Suite | from scratch | fine-tuned from `smolvla_base` | Paper |
 |---|---|---|---|
-| LIBERO-Spatial | 80.0 % | 81.0 % | 90.0 % |
-| LIBERO-Object | 98.0 % | 97.0 % | 96.0 % |
-| LIBERO-Goal | 92.0 % | 87.0 % | 92.0 % |
-| LIBERO-Long | **72.0 %** | 59.0 % | 71.0 % |
-| **Average** | **85.5 %** | 81.0 % | 87.3 % |
+| LIBERO-Spatial | 80 % | 81 % | 90 % |
+| LIBERO-Object | 98 % | 97 % | 96 % |
+| LIBERO-Goal | 94 % | 87 % | 92 % |
+| LIBERO-Long | 61 % | 59 % | 71 % |
+| **Average** | **83.2 %** | 81.0 % | 87.3 % |
 
-The LIBERO-Long gap (+13.0 pp, ≈3σ at 100 episodes per suite) is decisive.
-`smolvla_base` was pretrained on SO-101 teleoperation data, and adapting it to
-LIBERO costs a padded third camera — 21.5 GB peak VRAM instead of 12.2 GB and
-77 instead of 127 samples/s — for no benefit here.
+From-scratch is ahead by 2.2 pp on this seed. That is **within the noise** — the
+seed-to-seed spread of the from-scratch average alone is 81.5–84.0 % — so this
+measurement does not establish that either initialisation is better, only that
+fine-tuning `smolvla_base` brings no benefit worth its cost: adapting an
+SO-101-pretrained checkpoint to LIBERO needs a padded third camera, which raises
+peak VRAM from 12.2 GB to 21.5 GB and drops throughput from 127 to 77 samples/s.
 
-The trap worth recording: the from-scratch model *looked* far worse (67.0 %)
-until `n_action_steps` was corrected, because that first measurement used the
-checkpoint default of 50. Comparing two models under different inference
-settings produced a conclusion that a controlled rerun reversed.
+The trap worth recording: the from-scratch model first measured at 67.0 %, which
+prompted the switch to `smolvla_base`. That measurement used the checkpoint's
+default `n_action_steps=50`. Comparing two models under different inference
+settings produced a conclusion a controlled rerun did not support — and the
+22 GPU-hours spent fine-tuning bought nothing.
 
 ### Training length
 
-Also measured: extending the fine-tune from 30k to 100k steps moved the average
-from 80.0 % to 81.0 %, i.e. nothing outside the noise, matching a training loss
-that had been flat (0.233 → 0.228) since roughly step 25k.
-
----
+Extending the fine-tune from 30k to 100k steps moved its average from 80.0 % to
+81.0 %, i.e. nothing outside the noise, matching a training loss flat since
+roughly step 25k (0.233 → 0.228).
 
 ## 1. Environment
 
@@ -112,7 +123,7 @@ Three details in the SmolVLA paper (arXiv:2506.01844) are easy to miss and all
 of them change the result. They are recorded here because each one cost a
 training run to discover.
 
-**Training from scratch is the right call here — see Results.**
+**Training from scratch is at least as good as fine-tuning — see Results.**
 `--policy.type=smolvla --policy.load_vlm_weights=true` initialises the VLM
 backbone from SmolVLM2 and leaves the 100M-parameter action expert random.
 Fine-tuning `lerobot/smolvla_base` instead sounds closer to the paper, but
