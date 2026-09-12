@@ -59,6 +59,31 @@ default `n_action_steps=50`. Comparing two models under different inference
 settings produced a conclusion a controlled rerun did not support — and the
 22 GPU-hours spent fine-tuning bought nothing.
 
+### The LR schedule must be extended with `--steps`
+
+`SmolVLAConfig.scheduler_decay_steps` defaults to **30,000**. LeRobot's cosine
+scheduler *shortens* that when `--steps` is smaller, but never extends it, and
+logs nothing when `--steps` is larger. Training 100k steps with the default
+therefore parks the learning rate at `decay_lr=2.5e-6` — 1/38 of peak — from
+step 30k onward:
+
+| step | lr | loss |
+|---|---|---|
+| 10k | 7.8e-05 | 0.359 |
+| 20k | 2.9e-05 | 0.254 |
+| 30k | 2.6e-06 | 0.238 |
+| 50k | 2.5e-06 | 0.238 |
+| 100k | 2.5e-06 | 0.236 |
+
+Seventy percent of that run trained at the floor. This single mistake explains
+three separate observations that were confusing on their own: the loss going
+flat around step 25k, extending a fine-tune from 30k to 100k steps changing
+nothing, and the from-scratch and fine-tuned loss curves sitting on top of each
+other (both had stopped learning at the same point).
+
+`scripts/train.sh full` now passes `--policy.scheduler_decay_steps=100000` to
+keep the decay aligned with the run length.
+
 ### Training length
 
 Extending the fine-tune from 30k to 100k steps moved its average from 80.0 % to

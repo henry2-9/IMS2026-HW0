@@ -84,4 +84,8 @@ Both tasks are complete: benchmarks run, metrics collected, videos rendered,
 and every environment fix documented in the per-task READMEs.
 
 Artifacts **not** in this repository, per the assignment: the LIBERO dataset,
-all model checkpoints, and the rendered evaluation videos.
+model checkpoints, and rendered videos. Those are on the Hugging Face Hub:
+
+**[iug8oyo8/IMS2026-HW0-media](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media)** — Task 1 DynaNav
+videos (8 episodes, 4 scenes x 2 platforms) and the Task 2 LIBERO live-view
+recordings.

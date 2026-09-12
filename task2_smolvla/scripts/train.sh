@@ -38,7 +38,12 @@ case "$MODE" in
     JOB="smolvla_libero_smoke"
     ;;
   full)
+    # SmolVLA defaults scheduler_decay_steps to 30k. The scheduler shortens that
+    # when --steps is smaller, but never extends it: training 100k steps with the
+    # default leaves the LR pinned at decay_lr=2.5e-6 (1/38 of peak) from step 30k
+    # onward, so 70% of the run is wasted. Keep the decay aligned with --steps.
     STEPS=100000; SAVE_FREQ=10000;  BATCH=64; ACCUM=1
+    EXTRA_ARGS=(--policy.scheduler_decay_steps=100000)
     OUT="${HW0_ROOT}/task2_smolvla/outputs/libero_smolvla"
     JOB="smolvla_libero_full"
     ;;
