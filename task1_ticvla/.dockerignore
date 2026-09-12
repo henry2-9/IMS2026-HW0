@@ -1,0 +1,9 @@
+checkpoints/
+outputs/
+TIC-VLA/.git/
+TIC-VLA/docs/img/
+TIC-VLA/docs/javascript/
+TIC-VLA/docs/css/
+**/__pycache__/
+*.ckpt
+*.mp4

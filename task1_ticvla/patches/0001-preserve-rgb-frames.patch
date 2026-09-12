@@ -1,0 +1,47 @@
+diff --git a/DynaNav/behavior/nova_carter_test_ticvla.py b/DynaNav/behavior/nova_carter_test_ticvla.py
+index e099d57..8b3327d 100644
+--- a/DynaNav/behavior/nova_carter_test_ticvla.py
++++ b/DynaNav/behavior/nova_carter_test_ticvla.py
+@@ -771,9 +771,17 @@ class NovaCarterTICVLA(BehaviorScript):
+                         oldest = self._image_history.pop(0)
+                         if os.path.exists(oldest):
+                             try:
+-                                os.remove(oldest)
++                                # IMS2026 HW0: the robot-camera frames are the
++                                # assignment's RGB visual deliverable, but this
++                                # buffer only exists to feed the model and is
++                                # rotated away. Move each frame into a keep/
++                                # directory instead of deleting it, so the
++                                # model's buffer behaviour is unchanged.
++                                keep_dir = os.path.join(self._image_buffer_dir, "rgb_keep")
++                                os.makedirs(keep_dir, exist_ok=True)
++                                os.replace(oldest, os.path.join(keep_dir, os.path.basename(oldest)))
+                             except Exception as e:
+-                                carb.log_warn(f"Failed to remove old image {oldest}: {e}")
++                                carb.log_warn(f"Failed to archive old image {oldest}: {e}")
+ 
+             # Save third-person view camera image to logs
+             if self._image_buffer_dir is not None and self._camera_image_tp is not None:
+diff --git a/DynaNav/behavior/spot_test_ticvla.py b/DynaNav/behavior/spot_test_ticvla.py
+index f3f258c..46a0843 100644
+--- a/DynaNav/behavior/spot_test_ticvla.py
++++ b/DynaNav/behavior/spot_test_ticvla.py
+@@ -955,9 +955,16 @@ class SpotTICVLA(BehaviorScript):
+                         oldest = self._image_history.pop(0)
+                         try:
+                             if os.path.exists(oldest):
+-                                os.remove(oldest)
++                                # IMS2026 HW0: these robot-camera frames are the
++                                # assignment's RGB visual deliverable, but this
++                                # buffer exists only to feed the model and is
++                                # rotated away. Archive instead of deleting, so
++                                # the model's buffer behaviour is unchanged.
++                                keep_dir = os.path.join(self._image_buffer_dir, "rgb_keep")
++                                os.makedirs(keep_dir, exist_ok=True)
++                                os.replace(oldest, os.path.join(keep_dir, os.path.basename(oldest)))
+                         except Exception as e:
+-                            carb.log_warn(f"Failed to remove old image {oldest}: {e}")
++                            carb.log_warn(f"Failed to archive old image {oldest}: {e}")
+ 
+             # Save third-person view camera image to logs
+             if self._image_buffer_dir is not None and self._camera_image_tp is not None:

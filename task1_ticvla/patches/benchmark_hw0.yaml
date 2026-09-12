@@ -1,0 +1,113 @@
+# IMS2026 HW0 Task 1 - live demo benchmark set.
+#
+# The assignment requires four distinct scenes evaluated on two different robot
+# platforms (8 episodes total). The shipped benchmark_full.yaml covers all four
+# scenes but only ever uses nova_carter, so this config pairs one representative
+# episode per scene with each of the two platforms the DynaNav runner supports
+# (see DynaNav/benchmark.py::_spawn_robot).
+#
+# Episodes 1-4: nova_carter (wheeled)  | Episodes 5-8: spot (quadruped)
+# Scenes: hospital, warehouse, office, outdoor
+seed: 666
+navigation_method: ticvla
+success_threshold: 1.5
+episode_1:
+  scene: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Environments/Hospital/hospital.usd
+  start: &id001
+  - -3.0
+  - -1.2
+  - 0.01
+  start_yaw: 0.0
+  goal: &id002
+  - 9.52
+  - 2.33
+  - 0.01
+  instruction: Go straight ahead and stop at the vending machine at front.
+  timeout: 40
+  num_people: 0
+  robot_type: nova_carter
+episode_2:
+  scene: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Environments/Simple_Warehouse/full_warehouse.usd
+  start: &id003
+  - -10.22
+  - -7.36
+  - 0.01
+  start_yaw: 90
+  goal: &id004
+  - -3.26
+  - 7.61
+  - 0.01
+  instruction: Proceed to the traffic cones at the entrance of Aisle 05 (the second
+    aisle from the right).
+  timeout: 70
+  num_people: 0
+  robot_type: nova_carter
+episode_3:
+  scene: ${TICVLA_DYNANAV_ROOT}/assets/office.usd
+  start: &id005
+  - -2.85
+  - 9.6
+  - 0.01
+  start_yaw: -132
+  goal: &id006
+  - -13.4
+  - -1.2
+  - 0.01
+  instruction: Go straight ahead and stop at the nearest elevator.
+  timeout: 50
+  num_people: 0
+  robot_type: nova_carter
+episode_4:
+  scene: ${TICVLA_DYNANAV_ROOT}/assets/outdoor_small.usd
+  start: &id007
+  - 26.9
+  - 148.8
+  - 6.85
+  start_yaw: 160
+  goal: &id008
+  - 9.39
+  - 154.52
+  - 5.97
+  instruction: Go straight until reach the black and white striped umbrellas.
+  timeout: 100
+  num_people: 200
+  robot_type: nova_carter
+  success_threshold: 4
+episode_5:
+  scene: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Environments/Hospital/hospital.usd
+  start: *id001
+  start_yaw: 0.0
+  goal: *id002
+  instruction: Go straight ahead and stop at the vending machine at front.
+  timeout: 60
+  num_people: 0
+  robot_type: spot
+episode_6:
+  scene: https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Environments/Simple_Warehouse/full_warehouse.usd
+  start: *id003
+  start_yaw: 90
+  goal: *id004
+  instruction: Proceed to the traffic cones at the entrance of Aisle 05 (the second
+    aisle from the right).
+  timeout: 105
+  num_people: 0
+  robot_type: spot
+episode_7:
+  scene: ${TICVLA_DYNANAV_ROOT}/assets/office.usd
+  start: *id005
+  start_yaw: -132
+  goal: *id006
+  instruction: Go straight ahead and stop at the nearest elevator.
+  timeout: 75
+  num_people: 0
+  robot_type: spot
+episode_8:
+  scene: ${TICVLA_DYNANAV_ROOT}/assets/outdoor_small.usd
+  start: *id007
+  start_yaw: 160
+  goal: *id008
+  instruction: Go straight until reach the black and white striped umbrellas.
+  timeout: 150
+  num_people: 200
+  robot_type: spot
+  success_threshold: 4

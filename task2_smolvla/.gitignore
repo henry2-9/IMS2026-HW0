@@ -1,0 +1,7 @@
+outputs/
+eval_logs/
+*.mp4
+*.ckpt
+*.safetensors
+__pycache__/
+wandb/

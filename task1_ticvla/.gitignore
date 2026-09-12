@@ -1,0 +1,10 @@
+checkpoints/
+outputs/
+TIC-VLA/
+*.ckpt
+*.usd
+*.mp4
+
+# The patches ARE deliverables - they are how the upstream repo is reproduced
+!patches/
+!patches/*

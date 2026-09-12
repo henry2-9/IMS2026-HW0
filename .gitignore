@@ -1,0 +1,34 @@
+# 作業規定:不上傳資料集、模型權重、輸出影片
+# Assignment rules: no datasets, checkpoints, or output videos on GitHub.
+
+# Model weights / checkpoints
+task1_ticvla/checkpoints/
+task2_smolvla/outputs/
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+
+# Rendered frames and videos
+task1_ticvla/outputs/
+*.mp4
+*.jpg
+*.png
+*.gif
+
+# Evaluation artifacts (numbers are quoted in the READMEs instead)
+task2_smolvla/eval_logs/*/
+task2_smolvla/eval_logs/*.log
+
+# Upstream repositories are cloned by the setup steps, not vendored here
+lerobot/
+task1_ticvla/TIC-VLA/
+
+# Local scratch
+overnight.log
+finish_hw0.log
+finish_hw0.sh
+**/__pycache__/
+*.pyc
+.ipynb_checkpoints/
+wandb/
