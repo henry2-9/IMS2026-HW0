@@ -151,6 +151,13 @@ rest. The copies under `DynaNav/behavior/` are patched to move those frames into
 untouched but preserves the RGB deliverable. `docker/run.sh` mounts that
 directory over the image's copy, so the patch applies without a rebuild.
 
+### Videos must be H.264, not OpenCV's default
+
+`cv2.VideoWriter_fourcc(*"mp4v")` writes MPEG-4 Part 2. Chrome plays it; **Firefox
+does not**, so the clips look broken for anyone reviewing them there. The scripts
+now request `avc1` and `build_deliverables.sh` re-encodes with libx264 plus
+`+faststart` if OpenCV silently fell back. H.264 is also about half the size.
+
 ### Episodes run as subprocesses
 
 `benchmark.py` launches each episode as its own Isaac Sim subprocess, so the

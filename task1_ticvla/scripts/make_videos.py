@@ -81,8 +81,14 @@ def build(data_dir: Path, out_path: Path, fps: int) -> int:
                             pane(tp.get(k), f"{robot}  |  third-person view")])
         if writer is None:
             out_path.parent.mkdir(parents=True, exist_ok=True)
-            writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"),
+            # OpenCV's "mp4v" is MPEG-4 Part 2, which Chrome plays but Firefox
+            # does not. Prefer H.264 ("avc1"); fall back to mp4v and re-encode
+            # afterwards if this build of OpenCV has no H.264 encoder.
+            writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"avc1"),
                                      fps, (canvas.shape[1], canvas.shape[0]))
+            if not writer.isOpened():
+                writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"),
+                                         fps, (canvas.shape[1], canvas.shape[0]))
         writer.write(canvas)
         n += 1
     if writer is not None:
