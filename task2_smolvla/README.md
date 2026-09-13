@@ -12,7 +12,11 @@ Submitted model: **`--policy.type=smolvla`, 100k steps, batch 64,
 256x256 observations. LeRobot's LIBERO guide recommends averaging over three
 seeds, so all three are reported.
 
-Checkpoint: [`task2_smolvla_libero/pretrained_model`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task2_smolvla_libero)
+Artifacts on the Hub ([`iug8oyo8/IMS2026-HW0-media`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media)): the submitted
+[`pretrained_model/`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task2_smolvla_libero/pretrained_model),
+[`eval_info.json`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/blob/main/task2_smolvla_libero/eval_info.json), and
+[`live_view_400ep/`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task2_smolvla_libero/live_view_400ep) —
+the live-view recording of all 400 evaluation episodes.
 
 | Suite | seed 42 | seed 43 | seed 44 | mean | sd | Paper | Delta | within ±3 pp |
 |---|---|---|---|---|---|---|---|---|
