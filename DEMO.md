@@ -59,8 +59,16 @@ v_cmd=1.500, w_cmd=-0.011
 p_cur=[3.437, -0.443, 0.0]
 ```
 
-and ends with the aggregate block (Success Rate, Collision Rate, SPL,
-Navigation Error).
+A **single** episode runs in child mode, which writes its result to JSON rather
+than printing the aggregate block. The TA needs the 8-episode metrics on screen,
+so show the saved summary alongside the live run:
+
+```bash
+cat outputs/benchmark_results/*/benchmark_hw0_results_latest.txt
+```
+
+The full `./docker/run.sh bench` does end with that aggregate block itself
+(Success Rate, Collision Rate, SPL, Navigation Error).
 
 Per-episode videos, RGB on the left and third-person on the right:
 
@@ -69,6 +77,14 @@ Per-episode videos, RGB on the left and third-person on the right:
 ```
 
 ---
+
+## Rehearsal timings (measured)
+
+| step | time |
+|---|---|
+| Task 2 demo — 10 LIBERO-Long tasks, 1 episode each | **2.4 min** |
+| Task 1 — one episode, of which ~2.8 min is Isaac Sim startup | **~4 min** |
+| Task 1 — all 8 episodes | 1.5–2 h · run beforehand |
 
 ## Pre-flight checklist
 
