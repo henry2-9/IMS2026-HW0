@@ -39,6 +39,10 @@ RUN pip install --no-cache-dir torch==2.11.0 torchvision==0.26.0 \
         --index-url https://download.pytorch.org/whl/cu128 \
     && pip install --no-cache-dir -e "./lerobot[smolvla,libero]" \
     && pip install --no-cache-dir "numpy>=2.0.0,<2.3.0" \
+    # MuJoCo 3.4.0's box-box collision fix stops LIBERO's stored initial state
+    # for libero_spatial task 5 from settling the bowl onto the ramekin, which
+    # costs ~6 pp on that suite. Nothing upstream caps the version.
+    && pip install --no-cache-dir "mujoco<3.4.0" \
     && pip install --no-cache-dir opencv-python-headless imageio imageio-ffmpeg
 
 # LIBERO prompts for a dataset path on first import; pre-seed its config so

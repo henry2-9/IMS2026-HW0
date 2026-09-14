@@ -61,22 +61,22 @@ Four things cost real time to diagnose; all are documented in the task READMEs.
 Nova Carter 3/4, Spot 1/4, every episode collision-free. Details in
 [`task1_ticvla/README.md`](task1_ticvla/README.md).
 
-**Task 2 — SmolVLA on LIBERO** (400 episodes per seed, 3 seeds, `n_action_steps=10`)
+**Task 2 — SmolVLA on LIBERO** (400 episodes per seed, 3 seeds, `n_action_steps=10`, `mujoco<3.4.0`)
 
 | Suite | Ours (3-seed mean) | Paper | within ±3 pp |
 |---|---|---|---|
-| LIBERO-Spatial | 80.0 % | 90 % | no |
-| LIBERO-Object | **95.0 %** | 96 % | **yes** |
-| LIBERO-Goal | **92.3 %** | 92 % | **yes** |
-| LIBERO-Long | 75.0 % | 71 % | no (overshoots by 4.0) |
-| **Average** | **85.6 %** | 87.3 % | |
+| LIBERO-Spatial | 86.7 % | 90 % | no, by 0.3 pp |
+| LIBERO-Object | **94.7 %** | 96 % | **yes** |
+| LIBERO-Goal | **91.3 %** | 92 % | **yes** |
+| LIBERO-Long | 74.7 % | 71 % | no — overshoots |
+| **Average** | **86.8 %** | 87.3 % | **−0.5** |
 
-The average lands 1.7 pp under the paper. LIBERO-Long misses the band by beating
-it. LIBERO-Spatial is the one real shortfall: it reads 78–82 % across eight
-measurements spanning models whose training loss differed by 2.8x, so it is not a
-training-budget problem. Details, the learning-rate schedule that was worth 2.7 pp
-of average, and the head-to-head against fine-tuning `smolvla_base`, in
-[`task2_smolvla/README.md`](task2_smolvla/README.md).
+Every suite lands within 3.7 pp and the average within 0.5 pp. The single
+largest factor was not a hyperparameter: **MuJoCo ≥ 3.4.0 silently breaks
+`libero_spatial` task 5**, dropping it from 70 % to 33 % because LIBERO's stored
+initial state stops settling the bowl onto the ramekin. Pinning `mujoco<3.4.0`
+is worth ~6 pp on that suite. Details, and the learning-rate schedule worth
+another 2.7 pp of average, in [`task2_smolvla/README.md`](task2_smolvla/README.md).
 
 See [`DEMO.md`](DEMO.md) for the live-demo runbook.
 

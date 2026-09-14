@@ -8,35 +8,56 @@ official [LeRobot](https://github.com/huggingface/lerobot) implementation.
 
 Submitted model: **`--policy.type=smolvla`, 100k steps, batch 64,
 `scheduler_decay_steps=100000`**, evaluated over the full protocol (4 suites x
-10 tasks x 10 episodes = 400 episodes per seed) with `n_action_steps=10` and
-256x256 observations. LeRobot's LIBERO guide recommends averaging over three
-seeds, so all three are reported.
+10 tasks x 10 episodes = 400 episodes per seed) with `n_action_steps=10`,
+256x256 observations and **`mujoco<3.4.0`**. Three seeds, as LeRobot's LIBERO
+guide recommends.
 
-Artifacts on the Hub ([`iug8oyo8/IMS2026-HW0-media`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media)): the submitted
-[`pretrained_model/`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task2_smolvla_libero/pretrained_model),
-[`eval_info.json`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/blob/main/task2_smolvla_libero/eval_info.json), and
-[`live_view_400ep/`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media/tree/main/task2_smolvla_libero/live_view_400ep) —
-the live-view recording of all 400 evaluation episodes.
+Checkpoint and recordings: [`iug8oyo8/IMS2026-HW0-media`](https://huggingface.co/datasets/iug8oyo8/IMS2026-HW0-media)
 
 | Suite | seed 42 | seed 43 | seed 44 | mean | sd | Paper | Delta | within ±3 pp |
 |---|---|---|---|---|---|---|---|---|
-| LIBERO-Spatial | 82 % | 80 % | 78 % | 80.0 % | 1.6 | 90 % | −10.0 | no |
-| LIBERO-Object | 98 % | 94 % | 93 % | **95.0 %** | 2.2 | 96 % | −1.0 | **yes** |
-| LIBERO-Goal | 93 % | 90 % | 94 % | **92.3 %** | 1.7 | 92 % | +0.3 | **yes** |
-| LIBERO-Long | 71 % | 75 % | 79 % | 75.0 % | 3.3 | 71 % | **+4.0** | no |
-| **Average** | 86.0 % | 84.8 % | 86.0 % | **85.6 %** | | 87.3 % | −1.7 | |
+| LIBERO-Spatial | 88 % | 86 % | 86 % | 86.7 % | 0.9 | 90 % | −3.3 | no (by 0.3) |
+| LIBERO-Object | 94 % | 96 % | 94 % | **94.7 %** | 0.9 | 96 % | −1.3 | **yes** |
+| LIBERO-Goal | 90 % | 89 % | 95 % | **91.3 %** | 2.6 | 92 % | −0.7 | **yes** |
+| LIBERO-Long | 75 % | 73 % | 76 % | 74.7 % | 1.2 | 71 % | +3.7 | no (overshoots) |
+| **Average** | 86.8 % | 86.0 % | 87.8 % | **86.8 %** | | 87.3 % | **−0.5** | |
 
-The average sits 1.7 pp below the paper. Two suites are inside the ±3 pp band —
-and LIBERO-Long misses it by **overshooting**: at 75.0 % it beats the paper's
-71.0 % by 4 points, which the band counts as a miss in either direction.
+The average is 0.5 pp below the paper. Two suites are inside the ±3 pp band and
+the other two miss it by less than a point — LIBERO-Spatial by 0.3 pp, and
+LIBERO-Long by **overshooting**: at 74.7 % it beats the paper's 71 %, which the
+band counts as a miss in either direction. Every suite is within 3.7 pp.
 
-**LIBERO-Spatial is the one genuine shortfall.** It reads 78–82 % across eight
-measurements spanning two models whose final training loss differed by 2.8x
-(0.084 vs 0.234), while every other suite moved with training quality. Whatever
-limits it is not training budget. It is not the training setup either: the paper
-also trains a single multi-task model over all 40 tasks ("SmolVLA is always
-trained in a multi-task setting", 1,693 episodes), which is exactly what
-`lerobot/libero` and the command below do.
+### MuJoCo >= 3.4.0 silently breaks LIBERO-Spatial task 5
+
+This one is worth more than every hyperparameter on this page combined.
+
+MuJoCo 3.4.0 fixed a box-box collision-distance bug (`engine_collision_box.c`,
+commit `88383684`). LIBERO's stored initial state for `libero_spatial` task 5 —
+*"pick up the black bowl on the ramekin"* — places the bowl about 11 cm **above**
+the ramekin and relies on physics settling during `env.reset()` to drop it into
+place. That settling only worked *because* of the old bug. With the fix the bowl
+comes to rest tilted on the ramekin's rim, roughly half of it overhanging, and
+the task becomes close to impossible.
+
+Measured here — same checkpoint, same seed, same everything else:
+
+| | mujoco 3.8.1 | mujoco 3.3.7 |
+|---|---|---|
+| task 5 (*on the ramekin*) | 33.3 % | **70.0 %** |
+| LIBERO-Spatial | 82.0 % | **88.0 %** |
+| average over all four suites | 86.0 % | **86.8 %** |
+
+The other nine Spatial tasks move by at most ±7 pp, which is ordinary seed noise,
+so the effect is isolated to exactly the task the physics change breaks. Upstream
+reports the same (SmolVLA 0.45B: 80 % → 28 % on that task) in
+[huggingface/lerobot#4390](https://github.com/huggingface/lerobot/issues/4390).
+
+**Pin `mujoco<3.4.0`.** Nothing in `lerobot`, `robosuite` or `hf-libero` caps the
+version, so a fresh install lands on 3.8.x and quietly loses ~6 pp on
+LIBERO-Spatial. Finding it cost eight ruled-out hypotheses — training budget, data
+volume, initialisation, resolution, seeds, LR schedule, action horizon, image
+orientation — because it is not a model problem at all. No policy can pick up a
+bowl balanced on a rim with half of it in the air.
 
 ### What the learning-rate schedule was worth
 
@@ -122,6 +143,10 @@ export MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 
 # LIBERO prompts for a dataset path on first import — answer N once
 echo N | python -c "import libero.libero"
+
+# MuJoCo >= 3.4.0 breaks libero_spatial task 5 and nothing in the dependency
+# tree caps it — see "MuJoCo >= 3.4.0 silently breaks LIBERO-Spatial task 5"
+pip install "mujoco<3.4.0"
 ```
 
 ## 2. Data

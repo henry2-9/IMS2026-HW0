@@ -215,6 +215,12 @@ def main() -> int:
                    help="skip the on-screen window (still records mp4)")
     p.add_argument("--no-record", action="store_true", help="skip mp4 recording")
     p.add_argument("--control-mode", default="relative", choices=["relative", "absolute"])
+    p.add_argument("--flip-obs", action="store_true",
+                   help="rotate observations 180 deg before the policy sees them. "
+                        "robosuite renders bottom-up, so LiberoEnv._format_raw_obs "
+                        "hands the policy an inverted image while the lerobot/libero "
+                        "training frames are upright — LiberoEnv.render() applies "
+                        "exactly this correction but only for display.")
     p.add_argument("--obs-size", type=int, default=256,
                    help="camera render size fed to the policy. LeRobot's LiberoEnv "
                         "defaults to 360, but the lerobot/libero dataset (and hence "
@@ -332,6 +338,16 @@ def main() -> int:
                                 total_succ=total_succ, total_done=total_done,
                             )
 
+                            if args.flip_obs:
+                                obs = dict(obs)
+                                # ascontiguousarray: the reversed views have
+                                # negative strides, which torch.from_numpy rejects.
+                                obs["pixels"] = {
+                                    k: np.ascontiguousarray(
+                                        v[..., ::-1, ::-1, :] if v.ndim == 4 else v[::-1, ::-1]
+                                    )
+                                    for k, v in obs["pixels"].items()
+                                }
                             processed = preprocess_observation(obs)
                             try:
                                 processed["task"] = list(env.call("task_description"))
