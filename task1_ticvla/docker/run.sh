@@ -19,10 +19,35 @@ CACHE="${HOME}/docker/isaac-sim"
 mkdir -p "${CACHE}"/{cache/kit,cache/ov,cache/pip,cache/glcache,cache/computecache,logs,data,documents} \
          "${HERE}/outputs/benchmark_results" "${HERE}/outputs/frames" "${HERE}/outputs/logs"
 
-# `episode` mode writes into its own logs dir; LOGS_SRC must be set before
-# common_args is built, since docker rejects two mounts on the same target.
+# `episode` mode accepts either the raw episode name or a "robot:scene" pair,
+# which is what anyone actually remembers mid-demo. benchmark_hw0.yaml orders
+# episodes 1-4 as nova_carter over hospital/warehouse/office/outdoor and 5-8 as
+# spot over the same four.
+resolve_episode() {
+  local sel="${1,,}"
+  case "$sel" in
+    episode_[1-8]) echo "$sel"; return ;;
+    [1-8])         echo "episode_${sel}"; return ;;
+  esac
+  local robot="${sel%%:*}" scene="${sel##*:}" base idx
+  case "$robot" in
+    carter|nova_carter|nova) base=0 ;;
+    spot)                    base=4 ;;
+    *) echo "unknown robot '${robot}' (use carter or spot)" >&2; return 1 ;;
+  esac
+  case "$scene" in
+    hospital)  idx=1 ;;
+    warehouse) idx=2 ;;
+    office)    idx=3 ;;
+    outdoor)   idx=4 ;;
+    *) echo "unknown scene '${scene}' (hospital|warehouse|office|outdoor)" >&2; return 1 ;;
+  esac
+  echo "episode_$((base + idx))"
+}
+
 if [[ "${1:-}" == "episode" && -n "${2:-}" ]]; then
-  LOGS_SRC="${HERE}/outputs/logs_${2}"
+  EP_RESOLVED="$(resolve_episode "$2")" || exit 1
+  LOGS_SRC="${HERE}/outputs/logs_${EP_RESOLVED}"
   mkdir -p "$LOGS_SRC"
 fi
 
@@ -83,13 +108,25 @@ case "${1:-shell}" in
     # without --child (and a --result_json path) the parent ignores it and
     # re-runs the whole config, which is how a "rerun episode_1" silently
     # became a failed 8-episode run.
-    EP="${2:?usage: $0 episode <episode_name>}"
-    mkdir -p "${HERE}/outputs/logs_${EP}"
+    EP="${EP_RESOLVED:?usage: $0 episode <episode_N | robot:scene>}"
+    echo "==> running ${EP}"
     ${DOCKER} run "${common_args[@]}" \
       --entrypoint /bin/bash "${IMAGE}" -lc \
       "cd DynaNav && \${ISAAC_SIM_PYTHON} benchmark.py \
          -c configs/benchmark_hw0.yaml --navigation_method ticvla \
          --child --episode_name ${EP} --result_json /workspace/outputs/${EP}_result.json"
     ;;
-  *) echo "usage: $0 {build|shell|bench [config]|episode <name>}"; exit 1 ;;
+  *)
+    cat <<'USAGE'
+usage: run.sh {build | shell | bench [config] | episode <selector>}
+
+  episode selectors:
+    episode_5            raw name
+    5                    episode number
+    spot:hospital        robot:scene  (carter|spot : hospital|warehouse|office|outdoor)
+
+  episodes 1-4 are nova_carter, 5-8 are spot, each over
+  hospital, warehouse, office, outdoor in that order.
+USAGE
+    exit 1 ;;
 esac

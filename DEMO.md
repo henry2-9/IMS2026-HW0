@@ -54,8 +54,29 @@ commands) and the final aggregated metrics over the 8 episodes.
 ```bash
 cd task1_ticvla
 ./docker/run.sh bench                      # all 8 episodes
-./docker/run.sh episode episode_1          # a single episode
+./docker/run.sh episode spot:hospital      # a single episode
 ```
+
+Episode selectors — pick whichever you can remember under pressure:
+
+```bash
+./docker/run.sh episode spot:hospital      # robot:scene
+./docker/run.sh episode carter:outdoor
+./docker/run.sh episode 5                  # episode number
+./docker/run.sh episode episode_5          # raw name
+```
+
+Robots are `carter` (also `nova_carter`, `nova`) and `spot`; scenes are
+`hospital`, `warehouse`, `office`, `outdoor`. Episodes 1–4 are Nova Carter over
+those four scenes, 5–8 are Spot over the same four.
+
+| | hospital | warehouse | office | outdoor |
+|---|---|---|---|---|
+| Nova Carter | 1 ✓ | 2 ✗ | 3 ✓ | 4 ✓ |
+| Spot | 5 ✗ | 6 ✓ | 7 ✗ | 8 ✗ |
+
+For a demo that has to succeed on camera, `carter:hospital` is the safe pick:
+18.5 s, 1.49 m navigation error, no collision.
 
 Runtime ≈ 1.5–2 hours for all 8 — **run this before the session** and present
 the saved results, or demo a single episode live (≈ 10 minutes, of which ~3 are
