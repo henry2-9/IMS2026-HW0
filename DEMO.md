@@ -82,6 +82,21 @@ Runtime ≈ 1.5–2 hours for all 8 — **run this before the session** and pres
 the saved results, or demo a single episode live (≈ 10 minutes, of which ~3 are
 Isaac Sim startup).
 
+### Showing the robot during the run
+
+The benchmark itself is headless, so open a second terminal alongside it:
+
+```bash
+cd task1_ticvla
+python scripts/live_view.py          # RGB | third-person, updating live
+```
+
+It tails the frames the behaviour scripts write and shows the newest pair side
+by side, which is the same RGB + third-person pairing the assignment asks for in
+the visual deliverable. It only reads files, so it cannot affect the evaluation.
+It latches onto whichever episode is currently writing frames and follows the
+run from one episode to the next; press **q** to close.
+
 The terminal streams lines like:
 
 ```

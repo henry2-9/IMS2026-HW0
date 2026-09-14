@@ -212,6 +212,23 @@ right, H.264 so they play in any browser —
 dataset on the Hugging Face Hub. Hosted rather than committed, as the assignment
 requires for videos. Rebuild locally with `./scripts/build_deliverables.sh`.
 
+## Watching a run live
+
+`scripts/live_view.py` tails the two camera streams and displays the newest
+frame pair (robot RGB left, third-person right) while the benchmark runs, since
+the benchmark itself is headless. It is read-only and cannot influence results.
+
+```bash
+python scripts/live_view.py                 # follow the active run
+python scripts/live_view.py --dir <path>    # pin one *_ticvla_data directory
+```
+
+It selects the directory whose newest **frame file** is most recent, and ignores
+anything last written more than 30 s ago. Ranking by directory mtime is not
+enough — a finished episode leaves its directory behind, and on a re-run the
+stale one can still look newer than a live one that has not written its first
+frame yet.
+
 ## Live demo checklist
 
 The terminal must show, during the session:
