@@ -52,6 +52,15 @@ so the effect is isolated to exactly the task the physics change breaks. Upstrea
 reports the same (SmolVLA 0.45B: 80 % → 28 % on that task) in
 [huggingface/lerobot#4390](https://github.com/huggingface/lerobot/issues/4390).
 
+Going further back does not help — the regression is specifically 3.4.0, and
+3.3.7 is the best version inside the safe range:
+
+| mujoco | task 5 | LIBERO-Spatial |
+|---|---|---|
+| 3.8.1 | 33.3 % | 82.0 % |
+| **3.3.7** | **90.0 %** | **86.7 %** (3 seeds) |
+| 3.2.7 | 80.0 % | 84.0 % (2 seeds) |
+
 **Pin `mujoco<3.4.0`.** Nothing in `lerobot`, `robosuite` or `hf-libero` caps the
 version, so a fresh install lands on 3.8.x and quietly loses ~6 pp on
 LIBERO-Spatial. Finding it cost eight ruled-out hypotheses — training budget, data
