@@ -13,8 +13,19 @@ warm up.
 
 ```bash
 cd task2_smolvla
-./scripts/demo.sh
+./scripts/demo.sh                      # the graded run: LIBERO-Long, 10 tasks x 1 episode
 ```
+
+If the TA asks for a different suite:
+
+```bash
+./scripts/demo.sh --suite libero_goal  # or libero_spatial / libero_object / libero_10
+./scripts/demo.sh --suite all          # all four
+./scripts/demo.sh --episodes 3         # more episodes per task
+```
+
+LIBERO's own name for LIBERO-Long is **`libero_10`**, not `libero_long` — the
+script accepts both, plus the bare words `spatial`, `object`, `goal`, `long`.
 
 Runtime ≈ 1–2 minutes. The window shows, for every step:
 
