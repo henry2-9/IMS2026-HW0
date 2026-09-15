@@ -237,11 +237,26 @@ The failures are three different things, not one:
 |---|---|---|---|---|
 | 2 Carter · warehouse | 47.7 m | 0.68 m/s | 18.78 m | moved freely, navigated wrong |
 | 5 Spot · hospital | 37.1 m | 0.62 m/s | 22.95 m | moved freely, navigated wrong |
-| 7 Spot · office | 17.5 m | 0.23 m/s | 6.96 m | slow, but heading the right way |
+| 7 Spot · office | 17.5 m | 0.23 m/s | 6.96 m | circles near the goal |
 | 8 Spot · outdoor | 0.8 m | 0.005 m/s | 18.43 m | never walked |
 
 Successful episodes run at 0.66 m/s (Carter) and 0.54 m/s (Spot), so episodes 7
 and 8 are not navigation failures — the robot is barely moving.
+
+### Episode 7 is not short of time
+
+A 6.96 m error after covering only 17.5 m looks like a run that was cut off just
+short. It is not. Raising the timeout from 75 s to 250 s lets it walk 42.9 m —
+25 m further — and it ends up **8.84 m** from the goal, worse than before. It is
+circling near the target rather than converging, so more time cannot help.
+
+| timeout | path | nav. error |
+|---|---|---|
+| 75 s | 17.5 m | 6.96 m |
+| 250 s | 42.9 m | 8.84 m |
+
+That puts episode 7 in the same category as 2 and 5 — a navigation failure — just
+one that happens to stall closer to the goal.
 
 ### Spot cannot walk in the outdoor scene
 
