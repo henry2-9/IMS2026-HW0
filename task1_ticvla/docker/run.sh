@@ -17,7 +17,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CACHE="${HOME}/docker/isaac-sim"
 
 mkdir -p "${CACHE}"/{cache/kit,cache/ov,cache/pip,cache/glcache,cache/computecache,logs,data,documents} \
-         "${HERE}/outputs/benchmark_results" "${HERE}/outputs/frames" "${HERE}/outputs/logs"
+         "${HERE}/outputs/benchmark_results" "${HERE}/outputs/logs"
 
 # `episode` mode accepts either the raw episode name or a "robot:scene" pair,
 # which is what anyone actually remembers mid-demo. benchmark_hw0.yaml orders
@@ -76,10 +76,6 @@ common_args=(
   # TICVLA_DYNANAV_ROOT. That path is inside the image, so without this mount
   # every result is discarded when the --rm container exits.
   -v "${HERE}/outputs/benchmark_results:/workspace/TIC-VLA/DynaNav/benchmark_results:rw"
-  # The replicator writes its RGB frames to <config dir>/tmp/<run_id>/benchmark_output,
-  # which is also inside the image. Those frames are the assignment's visual
-  # deliverable, so mount that tree out as well.
-  -v "${HERE}/outputs/frames:/workspace/TIC-VLA/DynaNav/configs/tmp:rw"
   # The TIC-VLA behavior scripts write the two required camera views --
   # head_frame_*.jpg (robot RGB) and tp_frame_*.jpg (third person) -- under
   # DynaNav/logs/<run_id>/. That is the assignment's visual deliverable.
@@ -87,6 +83,11 @@ common_args=(
   # Mount the behavior scripts over the baked-in copy so they can be edited
   # without rebuilding the ~25 GB image.
   -v "${HERE}/TIC-VLA/DynaNav/behavior:/workspace/TIC-VLA/DynaNav/behavior:ro"
+  # Configs, so a new or edited benchmark yaml is visible without a rebuild --
+  # without this the container only sees the copy baked in at build time and
+  # exits with "Invalid config file path". Must be writable: benchmark.py
+  # generates its character and robot command files under configs/tmp/<run_id>.
+  -v "${HERE}/TIC-VLA/DynaNav/configs:/workspace/TIC-VLA/DynaNav/configs:rw"
 )
 
 case "${1:-shell}" in
@@ -104,7 +105,11 @@ case "${1:-shell}" in
       -lc "DynaNav/run_benchmark.sh ${CONFIG}"
     ;;
   episode)
-    # Re-run a single episode. --episode_name only takes effect in child mode:
+    # Re-run a single episode. This bypasses run_benchmark.sh, so TICVLA_DYNANAV_ROOT
+    # has to be exported here: the office and outdoor scenes are local USD paths
+    # written as ${TICVLA_DYNANAV_ROOT}/assets/..., and without it Isaac Sim fails
+    # with "Unable to load scene due to missing scene path in config". Hospital and
+    # warehouse use remote URLs, so they work either way and hide the bug. --episode_name only takes effect in child mode:
     # without --child (and a --result_json path) the parent ignores it and
     # re-runs the whole config, which is how a "rerun episode_1" silently
     # became a failed 8-episode run.
@@ -112,7 +117,9 @@ case "${1:-shell}" in
     echo "==> running ${EP}"
     ${DOCKER} run "${common_args[@]}" \
       --entrypoint /bin/bash "${IMAGE}" -lc \
-      "cd DynaNav && \${ISAAC_SIM_PYTHON} benchmark.py \
+      "cd DynaNav && \
+       export TICVLA_DYNANAV_ROOT=/workspace/TIC-VLA/DynaNav && \
+       \${ISAAC_SIM_PYTHON} benchmark.py \
          -c configs/benchmark_hw0.yaml --navigation_method ticvla \
          --child --episode_name ${EP} --result_json /workspace/outputs/${EP}_result.json"
     ;;

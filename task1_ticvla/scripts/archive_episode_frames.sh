@@ -26,15 +26,26 @@ snapshot() {
     mkdir -p "$out"
     # The container runs as root and its log directory is not writable by the
     # host user, so the frames must be copied, not moved.
-    # Only archive frames this episode actually wrote. Both robot directories
-    # persist for the whole run, so a Spot episode would otherwise inherit a
-    # stale copy of the last Carter episode's frames (and vice versa).
-    if [[ -z "$(find "$d" -maxdepth 2 -name '*.jpg' -newermt '-10 minutes' -print -quit 2>/dev/null)" ]]; then
+    # Copy only the frames *this* episode wrote. Both robot directories persist
+    # for the whole run and episodes restart frame numbering at zero, so without
+    # a time filter an episode that produced few frames (a robot that never
+    # moved, say) silently inherits the previous episode's footage and its video
+    # ends up showing the wrong scene entirely.
+    #
+    # -newer against a marker file dropped when the episode started is exact,
+    # unlike a fixed "-newermt -10 minutes" window that depends on how long the
+    # episode happened to take.
+    MARK="${DEST}/.${ep}.start"
+    if [[ ! -f "$MARK" ]]; then
+      cp -a "$d"/*.jpg "$out"/ 2>/dev/null
+    else
+      find "$d" -maxdepth 2 -name '*.jpg' -newer "$MARK" -exec cp -a -t "$out" {} + 2>/dev/null
+    fi
+    if [[ -z "$(find "$out" -name '*.jpg' -print -quit 2>/dev/null)" ]]; then
+      echo "$(date +%H:%M:%S) ${ep}/$(basename "$d"): 無新影格,略過"
       rmdir "$out" 2>/dev/null
       continue
     fi
-    cp -a "$d"/*.jpg "$out"/ 2>/dev/null
-    [[ -d "$d/rgb_keep" ]] && cp -a "$d"/rgb_keep/*.jpg "$out"/ 2>/dev/null
     local n; n=$(find "$out" -name '*.jpg' 2>/dev/null | wc -l)
     echo "$(date +%H:%M:%S) 歸檔 ${ep}/$(basename "$d"): ${n} 張"
   done < <(find "${HERE}/outputs/logs" -type d -name '*_ticvla_data' 2>/dev/null)
@@ -51,6 +62,7 @@ while true; do
   if [[ -n "$cur" && "$cur" != "$prev" ]]; then
     [[ -n "$prev" ]] && snapshot "$prev"
     prev="$cur"
+    mkdir -p "$DEST"; touch "${DEST}/.${cur}.start"   # marker for the time filter
     echo "$(date +%H:%M:%S) 目前執行: $cur"
   fi
   sleep 15

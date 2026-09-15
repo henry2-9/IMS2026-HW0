@@ -229,6 +229,42 @@ enough — a finished episode leaves its directory behind, and on a re-run the
 stale one can still look newer than a live one that has not written its first
 frame yet.
 
+## Why four episodes fail
+
+The failures are three different things, not one:
+
+| episode | path | rate | nav. error | reading |
+|---|---|---|---|---|
+| 2 Carter · warehouse | 47.7 m | 0.68 m/s | 18.78 m | moved freely, navigated wrong |
+| 5 Spot · hospital | 37.1 m | 0.62 m/s | 22.95 m | moved freely, navigated wrong |
+| 7 Spot · office | 17.5 m | 0.23 m/s | 6.96 m | slow, but heading the right way |
+| 8 Spot · outdoor | 0.8 m | 0.005 m/s | 18.43 m | never walked |
+
+Successful episodes run at 0.66 m/s (Carter) and 0.54 m/s (Spot), so episodes 7
+and 8 are not navigation failures — the robot is barely moving.
+
+### Spot cannot walk in the outdoor scene
+
+Episode 8 reproduces exactly (0.81 m every run). It is not the 200 pedestrians
+and not the spawn point:
+
+| variant | path length |
+|---|---|
+| 200 people, original start | 0.81 m |
+| **0 people**, original start | 0.81 m |
+| 0 people, start from `benchmark_full` ep 53 (z = 8.00) | 1.90 m, physical collision |
+| 0 people, start from `benchmark_full` ep 57 (z = 8.00) | 1.18 m |
+
+Carter covers the same scene in 23.4 s, and Spot walks fine in hospital,
+warehouse and office — it succeeds in warehouse. So the limit is the combination.
+The quadruped runs under `SpotFlatTerrainPolicy`, a **flat-terrain** gait
+controller, and the outdoor plaza has steps, slopes and planters. The upstream
+benchmark's 85 episodes are all Nova Carter, so this combination has never been
+exercised.
+
+This one is a property of the released policy, not a configuration mistake, and
+no setting reachable from the benchmark config fixes it.
+
 ## Live demo checklist
 
 The terminal must show, during the session:
